@@ -1,0 +1,19 @@
+{
+  "name": "albokemon_backend",
+  "version": "1.0.0",
+  "description": "Made for the FS Developer Test",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EzpadaZ/Albokemon-backend.git"
+  },
+  "author": "Jorge E.",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EzpadaZ/Albokemon-backend/issues"
+  },
+  "homepage": "https://github.com/EzpadaZ/Albokemon-backend#readme"
+}
