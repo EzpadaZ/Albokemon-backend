@@ -15,5 +15,14 @@
   "bugs": {
     "url": "https://github.com/EzpadaZ/Albokemon-backend/issues"
   },
-  "homepage": "https://github.com/EzpadaZ/Albokemon-backend#readme"
+  "homepage": "https://github.com/EzpadaZ/Albokemon-backend#readme",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "http": "^0.0.1-security",
+    "luxon": "^3.7.2",
+    "nodemon": "^3.1.14",
+    "socket.io": "^4.8.3",
+    "uuid": "^13.0.0"
+  }
 }
