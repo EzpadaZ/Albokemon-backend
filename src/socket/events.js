@@ -12,6 +12,11 @@ export const EVENTS = {
     MATCH_START: "match/start",
     MATCH_DECLINE: "match/decline",
     MATCH_DECLINED: "match/declined",
+
+
+    BATTLE_ATTACK: "battle/attack",
+    BATTLE_STATE: "battle/state",
+    BATTLE_SYNC: "battle/sync",
     
     ERROR: "err",
 };

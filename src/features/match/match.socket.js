@@ -1,6 +1,8 @@
 import { logger } from "../../shared/logger.js";
 import { EVENTS } from "../../socket/events.js";
 import { lobbyGetSocketIdByUserId } from "../lobby/lobby.store.js";
+import { assignPokemonsForMatch } from "../battle/pokemon.service.js";
+import { createBattle } from "../battle/battle.store.js";
 import {
     hasActiveMatch,
     createInvite,
@@ -35,12 +37,11 @@ export function registerMatchSocket(io, socket) {
         });
     });
 
-    socket.on(EVENTS.MATCH_ACCEPT, ({ fromUserId } = {}) => {
+    socket.on(EVENTS.MATCH_ACCEPT, async ({ fromUserId } = {}) => {
         const me = socket.data.user;
         if (!me) return socket.emit(EVENTS.ERROR, { code: "NO_AUTH", msg: "Login first" });
 
-        const invite = getInvite(me.id); // invite stored by target (me)
-
+        const invite = getInvite(me.id);
         if (!invite || invite.originId !== fromUserId) {
             return socket.emit(EVENTS.ERROR, { code: "NO_INVITE", msg: "No pending invite" });
         }
@@ -56,18 +57,58 @@ export function registerMatchSocket(io, socket) {
             return socket.emit(EVENTS.ERROR, { code: "IN_MATCH", msg: "Someone already in a match" });
         }
 
+        // 1) Create match + room
         const { matchId, roomId } = createMatch({ id: fromUserId }, { id: me.id });
 
+        // 2) Join both sockets to room
         socket.join(roomId);
-        io.sockets.sockets.get(fromSocketId)?.join(roomId);
+        const inviterSocket = io.sockets.sockets.get(fromSocketId);
+        inviterSocket?.join(roomId);
 
+        // 3) Resolve inviter user object (id+name)
+        const inviterUser = inviterSocket?.data?.user ?? { id: fromUserId, name: invite.originName };
+
+        // 4) Clear invite now that match is accepted
         clearInvite(me.id);
 
+        // 5) Fetch pokemons & split 3/3
+        let teams;
+        try {
+            teams = await assignPokemonsForMatch(); // { p1Team, p2Team }
+        } catch (e) {
+            return socket.emit(EVENTS.ERROR, {
+                code: "POKEMON_API_FAIL",
+                msg: `Failed to assign pokemons: ${e?.message ?? e}`,
+            });
+        }
+
+        // 6) Create battle state in memory
+        const battleState = createBattle({
+            matchId,
+            roomId,
+            p1: { id: inviterUser.id, name: inviterUser.name },
+            p2: { id: me.id, name: me.name },
+            p1Team: teams.p1Team,
+            p2Team: teams.p2Team,
+        });
+
+        // 7) Notify both clients: match/start (so both are in "battle" view)
         io.to(roomId).emit(EVENTS.MATCH_START, {
             matchId,
             roomId,
-            p1: { id: fromUserId, name: invite.originName }, // inviter
-            p2: { id: me.id, name: me.name },                // accepter
+            p1: { id: inviterUser.id, name: inviterUser.name },
+            p2: { id: me.id, name: me.name },
+            pokemonByPlayerId: {
+                [inviterUser.id]: teams.p1Team,
+                [me.id]: teams.p2Team,
+            },
+        });
+
+        // 8) Initial battle snapshot
+        io.to(roomId).emit(EVENTS.BATTLE_STATE, {
+            matchId,
+            state: battleState,
+            events: [],
         });
     });
 

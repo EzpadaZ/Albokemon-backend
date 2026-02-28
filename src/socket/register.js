@@ -1,6 +1,7 @@
 import { registerAuthSocket } from "../features/auth/auth.socket.js";
 import { registerLobbySocket } from "../features/lobby/lobby.socket.js";
 import { registerMatchSocket } from "../features/match/match.socket.js";
+import { registerBattleSocket } from "../features/battle/battle.socket.js";
 import { logger } from "../shared/logger.js";
 
 export function registerSocketHandlers(io) {
@@ -38,6 +39,7 @@ export function registerSocketHandlers(io) {
         registerAuthSocket(io, socket);
         registerLobbySocket(io, socket);
         registerMatchSocket(io, socket);
+        registerBattleSocket(io, socket);
 
         socket.on("disconnect", (reason) => {
 
