@@ -14,10 +14,8 @@ app.get("/health", (_req, res) => res.json({ response: "OK" }));
 const port = process.env.PORT || 8080;
 const cors = process.env.CORS_ORIGIN || "*";
 
-await initMongo();
-
 const server = app.listen(port, "0.0.0.0", () => logger.info(`Server [BOOT@${port}]`));
-
+initMongo().catch((e) => logger.error("Mongo init failed", { message: e?.message ?? String(e) }));
 
 server.on("error", (err) => {
     logger.error("Server [ERROR] ::", { code: err.code, message: err.message, port });

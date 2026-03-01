@@ -11,6 +11,7 @@ import {
     clearInvitesFromOrigin,
     getInvitesFromOrigin,
     createMatch,
+    endMatch
 } from "./match.store.js";
 
 import { getDb } from "../../shared/mongo.js";
@@ -75,13 +76,26 @@ export function registerMatchSocket(io, socket) {
 
         // 5) Fetch pokemons & split 3/3
         let teams;
+
         try {
-            teams = await assignPokemonsForMatch(); // { p1Team, p2Team }
+            teams = await assignPokemonsForMatch();
         } catch (e) {
-            return socket.emit(EVENTS.ERROR, {
-                code: "POKEMON_API_FAIL",
-                msg: `Failed to assign pokemons: ${e?.message ?? e}`,
-            });
+            const code = "POKEMON_API_FAIL";
+            const msg = `Failed to assign pokemons: ${e?.message ?? e}`;
+
+            endMatch(matchId); // matchId always exists here
+
+            // leave room to avoid leaking membership
+            socket.leave(roomId);
+            inviterSocket?.leave(roomId);
+
+            socket.emit(EVENTS.ERROR, { code, msg });
+            socket.emit(EVENTS.MATCH_DECLINED, { byUserId: me.id, reason: "error" });
+
+            io.to(fromSocketId).emit(EVENTS.ERROR, { code, msg });
+            io.to(fromSocketId).emit(EVENTS.MATCH_DECLINED, { byUserId: me.id, reason: "error" });
+
+            return;
         }
 
         // 6) Create battle state in memory
@@ -95,25 +109,50 @@ export function registerMatchSocket(io, socket) {
         });
 
         // 6.5 Create match doc
-        const db = getDb();
-        await db.collection("matches").updateOne(
-            { _id: matchId },
-            {
-                $setOnInsert: {
-                    roomId,
-                    challengerId: inviterUser.id,
-                    challengerName: inviterUser.name,
-                    challengedId: me.id,
-                    challengedName: me.name,
-                    cdate: new Date(),
-                    winnerId: null,
-                    endReason: null,
-                    events: [], // keep this if you want, but DO NOT push in same op
+        try {
+            const db = getDb();
+            await db.collection("matches").updateOne(
+                { _id: matchId },
+                {
+                    $setOnInsert: {
+                        roomId,
+                        challengerName: inviterUser.name,
+                        challengedName: me.name,
+                        cdate: new Date(),
+                        winnerId: null,
+                        endReason: null,
+                        events: [],
+
+                        // ✅ store full teams
+                        challengerPokedex: teams.p1Team, // 3 pokemons
+                        challengedPokedex: teams.p2Team, // 3 pokemons
+
+                        // ✅ who has the faster active pokemon + who starts first
+                        fasterPokemon: (() => {
+                            const p1 = teams.p1Team?.[0];
+                            const p2 = teams.p2Team?.[0];
+                            const s1 = Number(p1?.speed ?? 0);
+                            const s2 = Number(p2?.speed ?? 0);
+
+                            if (s1 > s2) return { owner: "challenger", pokemon: { id: p1.id, name: p1.name, speed: s1 } };
+                            if (s2 > s1) return { owner: "challenged", pokemon: { id: p2.id, name: p2.name, speed: s2 } };
+                            return { owner: "tie", pokemon: null };
+                        })(),
+
+                        firstTurn: (() => {
+                            const firstId = battleState.turnUserId;
+                            if (firstId === inviterUser.id) return inviterUser.name;
+                            if (firstId === me.id) return me.name;
+                            return "unknown";
+                        })(), // ✅ authoritative from battle init (speed rule)
+                    },
+                    $set: { udate: new Date() },
                 },
-                $set: { udate: new Date() },
-            },
-            { upsert: true }
-        );
+                { upsert: true }
+            );
+        } catch (e) {
+            logger.error(e);
+        }
 
         // 7) Notify both clients: match/start (so both are in "battle" view)
         io.to(roomId).emit(EVENTS.MATCH_START, {
