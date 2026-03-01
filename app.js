@@ -11,12 +11,12 @@ app.use(express.json());
 // health check
 app.get("/health", (_req, res) => res.json({ response: "OK" }));
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 const cors = process.env.CORS_ORIGIN || "*";
 
 await initMongo();
 
-const server = app.listen(port, () => logger.info(`Server [BOOT@${port}]`));
+const server = app.listen(port, "0.0.0.0", () => logger.info(`Server [BOOT@${port}]`));
 
 
 server.on("error", (err) => {
