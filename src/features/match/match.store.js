@@ -22,6 +22,14 @@ export function getInvite(targetUser) {
     return pendingInvites.get(targetUser);
 }
 
+export function endMatch(matchId) {
+    const m = matches.get(matchId);
+    if (!m) return;
+    activeMatchesByUser.delete(m.p1Id);
+    activeMatchesByUser.delete(m.p2Id);
+    matches.delete(matchId);
+}
+
 export function clearInvite(targetUser) {
     pendingInvites.delete(targetUser);
 }
