@@ -48,7 +48,9 @@ export function getInvitesFromOrigin(originId) {
     return out;
 }
 
-
+export function getActiveMatchId(userId) {
+    return activeMatchesByUser.get(userId);
+}
 
 export function createMatch(p1, p2) {
     const matchId = uuidv4();

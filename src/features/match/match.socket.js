@@ -13,6 +13,8 @@ import {
     createMatch,
 } from "./match.store.js";
 
+import { getDb } from "../../shared/mongo.js";
+
 
 export function registerMatchSocket(io, socket) {
     socket.on(EVENTS.MATCH_REQUEST, ({ targetUserId } = {}) => {
@@ -91,6 +93,27 @@ export function registerMatchSocket(io, socket) {
             p1Team: teams.p1Team,
             p2Team: teams.p2Team,
         });
+
+        // 6.5 Create match doc
+        const db = getDb();
+        await db.collection("matches").updateOne(
+            { _id: matchId },
+            {
+                $setOnInsert: {
+                    roomId,
+                    challengerId: inviterUser.id,
+                    challengerName: inviterUser.name,
+                    challengedId: me.id,
+                    challengedName: me.name,
+                    cdate: new Date(),
+                    winnerId: null,
+                    endReason: null,
+                    events: [], // keep this if you want, but DO NOT push in same op
+                },
+                $set: { udate: new Date() },
+            },
+            { upsert: true }
+        );
 
         // 7) Notify both clients: match/start (so both are in "battle" view)
         io.to(roomId).emit(EVENTS.MATCH_START, {
