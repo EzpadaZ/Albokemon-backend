@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 
 // health check
-app.get("/health", (_req, res) => res.json({ response: "OK" }));
+app.get("/health", (_req, res) => res.json({ response: "OK", message: "I AM ALIVE" }));
 
 const port = process.env.PORT || 8080;
 const cors = process.env.CORS_ORIGIN || "*";
