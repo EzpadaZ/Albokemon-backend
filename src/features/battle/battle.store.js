@@ -16,8 +16,16 @@ export function createBattle({ matchId, roomId, p1, p2, p1Team, p2Team }) {
             [p2.id]: { id: p2.id, name: p2.name, team: p2Team, activeIndex: 0 },
         },
         active: {
-            [p1.id]: { ...p1Team[0], currentHp: Number(p1Team[0].hp ?? 0) },
-            [p2.id]: { ...p2Team[0], currentHp: Number(p2Team[0].hp ?? 0) },
+            [p1.id]: {
+                ...p1Team[0],
+                maxHp: Number(p1Team[0].hp ?? 0),
+                currentHp: Number(p1Team[0].hp ?? 0),
+            },
+            [p2.id]: {
+                ...p2Team[0],
+                maxHp: Number(p2Team[0].hp ?? 0),
+                currentHp: Number(p2Team[0].hp ?? 0),
+            },
         },
         winnerId: null,
         eventsLog: []
