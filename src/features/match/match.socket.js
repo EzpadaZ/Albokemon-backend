@@ -31,6 +31,22 @@ export function registerMatchSocket(io, socket) {
         const targetSocketId = lobbyGetSocketIdByUserId(targetUserId);
         if (!targetSocketId) return socket.emit(EVENTS.ERROR, { code: "OFFLINE", msg: "User is not connected" });
 
+        if (getInvite(targetUserId)) {
+            return socket.emit(EVENTS.ERROR, {
+                code: "TARGET_BUSY",
+                msg: "User already has a pending invite",
+            });
+        }
+
+        const outgoing = getInvitesFromOrigin(me.id);
+        if (outgoing.length > 0) {
+            return socket.emit(EVENTS.ERROR, { code: "YOU_BUSY", msg: "You already sent an invite" });
+        }
+
+        if (getInvitesFromOrigin(targetUserId).length > 0) {
+            return socket.emit(EVENTS.ERROR, { code: "TARGET_BUSY", msg: "User is sending an invite" });
+        }
+
         // Send match invite over.
         createInvite(targetUserId, me);
 
