@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  mongo:
+    image: mongo:7
+    container_name: albokemon-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: albokemon
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: .
+    container_name: albokemon-backend
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      CORS_ORIGIN: "*"
+      MONGO_URI: "mongodb://mongo:27017"
+      MONGO_DB: "albokemon"
+      POKE_API: "https://pokemon-api-92034153384.us-central1.run.app"
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
