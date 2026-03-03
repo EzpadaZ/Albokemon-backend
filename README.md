@@ -13,6 +13,28 @@ Current scope:
 
 ---
 
+## Build Instructions
+
+## Option 1 (Docker)
+
+- Ensure you have docker running on your machine
+- Open a terminal application and run ```docker compose up --build```
+- Connect through your local IP:8080 on the application.
+
+## Option 2 (NodeJS)
+
+- Ensure you have MongoDB Installed and running on your machine on the default ports (27017).
+- Run on the root of the project
+- ```npm i```
+
+If you have nodemon installed
+```nodemon app.js```
+
+Just node
+```node app.js```
+
+---
+
 ## Architecture
 
 This project uses a **feature-based / vertical-slice architecture** with a thin Socket.IO transport layer:
