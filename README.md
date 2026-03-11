@@ -1,3 +1,7 @@
+# Archive Notice
+
+When this goes up the service has been taken down, if you need to test it please run the backend with the instructions below.
+
 # Albokemon Backend (Socket.IO)
 
 Small real-time backend for a turn-based “Pokémon-style” battler.
