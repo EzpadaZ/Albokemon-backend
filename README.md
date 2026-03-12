@@ -1,3 +1,7 @@
+> [!WARNING]
+> # Archive Notice
+> When this goes up, the service has been taken down. If you need to test it, please run the backend using the instructions on the following website and modify the front end [game_manager.dart](https://github.com/EzpadaZ/Albokemon-app/blob/master/lib/shared/utils/game_manager.dart) with your local URL. [App Repository](https://github.com/EzpadaZ/Albokemon-app)
+
 # Albokemon Backend (Socket.IO)
 
 Small real-time backend for a turn-based “Pokémon-style” battler.
