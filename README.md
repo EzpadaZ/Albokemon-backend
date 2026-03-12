@@ -1,6 +1,6 @@
 # Archive Notice
 
-When this goes up the service has been taken down, if you need to test it please run the backend with the instructions below.
+When this goes up the service has been taken down, if you need to test it please run the backend with the instructions on the following website and modify
 
 # Albokemon Backend (Socket.IO)
 
